@@ -1,0 +1,286 @@
+
+        // Game Functions
+        let gameState = {
+            snake: [{ x: 200, y: 200 }],
+            food: { x: 100, y: 100 },
+            direction: { x: 20, y: 0 },
+            score: 0,
+            gameRunning: false,
+            gameInterval: null
+        };
+
+        function startSnakeGame() {
+            document.getElementById('game-container').style.display = 'block';
+            resetGame();
+            gameState.gameRunning = true;
+            gameState.gameInterval = setInterval(updateSnakeGame, 200);
+        }
+
+        function updateSnakeGame() {
+            if (!gameState.gameRunning) return;
+
+            // Move snake
+            const head = { 
+                x: gameState.snake[0].x + gameState.direction.x, 
+                y: gameState.snake[0].y + gameState.direction.y 
+            };
+
+            // Check wall collision
+            if (head.x < 0 || head.x >= 400 || head.y < 0 || head.y >= 400) {
+                gameOver();
+                return;
+            }
+
+            // Check self collision
+            if (gameState.snake.some(segment => segment.x === head.x && segment.y === head.y)) {
+                gameOver();
+                return;
+            }
+
+            gameState.snake.unshift(head);
+
+            // Check food collision
+            if (head.x === gameState.food.x && head.y === gameState.food.y) {
+                gameState.score += 10;
+                document.getElementById('game-score').textContent = gameState.score;
+                generateFood();
+            } else {
+                gameState.snake.pop();
+            }
+
+            renderSnakeGame();
+        }
+
+        function renderSnakeGame() {
+            const gameBoard = document.getElementById('game-board');
+            gameBoard.innerHTML = '';
+
+            // Render snake
+            gameState.snake.forEach(segment => {
+                const snakeElement = document.createElement('div');
+                snakeElement.className = 'snake-segment';
+                snakeElement.style.left = segment.x + 'px';
+                snakeElement.style.top = segment.y + 'px';
+                gameBoard.appendChild(snakeElement);
+            });
+
+            // Render food
+            const foodElement = document.createElement('div');
+            foodElement.className = 'food';
+            foodElement.style.left = gameState.food.x + 'px';
+            foodElement.style.top = gameState.food.y + 'px';
+            gameBoard.appendChild(foodElement);
+        }
+
+        function generateFood() {
+            gameState.food = {
+                x: Math.floor(Math.random() * 20) * 20,
+                y: Math.floor(Math.random() * 20) * 20
+            };
+        }
+
+        function gameOver() {
+            gameState.gameRunning = false;
+            clearInterval(gameState.gameInterval);
+            
+            const highScore = Math.max(gameState.score, parseInt(localStorage.getItem('snakeHighScore') || '0'));
+            localStorage.setItem('snakeHighScore', highScore.toString());
+            document.getElementById('high-score').textContent = highScore;
+            
+            alert(`Game Over! Your score: ${gameState.score}`);
+        }
+
+        function pauseGame() {
+            if (gameState.gameRunning) {
+                gameState.gameRunning = false;
+                clearInterval(gameState.gameInterval);
+            } else {
+                gameState.gameRunning = true;
+                gameState.gameInterval = setInterval(updateSnakeGame, 200);
+            }
+        }
+
+        function resetGame() {
+            clearInterval(gameState.gameInterval);
+            gameState = {
+                snake: [{ x: 200, y: 200 }],
+                food: { x: 100, y: 100 },
+                direction: { x: 20, y: 0 },
+                score: 0,
+                gameRunning: false,
+                gameInterval: null
+            };
+            document.getElementById('game-score').textContent = '0';
+            document.getElementById('high-score').textContent = localStorage.getItem('snakeHighScore') || '0';
+            generateFood();
+            renderSnakeGame();
+        }
+
+        // Cricket Game
+        function startCricketGame() {
+            document.getElementById('game-container').style.display = 'block';
+            const gameBoard = document.getElementById('game-board');
+            gameBoard.innerHTML = `
+                <div style="text-align: center; padding: 50px; color: white;">
+                    <h3>Cricket Game</h3>
+                    <div style="font-size: 2rem; margin: 20px 0;">🏏</div>
+                    <p>Runs: <span id="cricket-runs">0</span></p>
+                    <p>Balls: <span id="cricket-balls">0</span>/6</p>
+                    <div style="margin-top: 20px;">
+                        <button class="btn" onclick="playCricketShot()">Play Shot!</button>
+                    </div>
+                    <div id="cricket-result" style="margin-top: 20px;"></div>
+                </div>
+            `;
+            
+            window.cricketScore = { runs: 0, balls: 0 };
+        }
+
+        function playCricketShot() {
+            if (window.cricketScore.balls >= 6) {
+                document.getElementById('cricket-result').innerHTML = 
+                    `<p style="color: #00ff00;">Over Complete! Final Score: ${window.cricketScore.runs} runs</p>`;
+                return;
+            }
+
+            const outcomes = [0, 1, 2, 3, 4, 6, 'OUT'];
+            const result = outcomes[Math.floor(Math.random() * outcomes.length)];
+            
+            window.cricketScore.balls++;
+            
+            if (result === 'OUT') {
+                document.getElementById('cricket-result').innerHTML = 
+                    `<p style="color: #ff0000;">OUT! Final Score: ${window.cricketScore.runs} runs in ${window.cricketScore.balls} balls</p>`;
+            } else {
+                window.cricketScore.runs += result;
+                document.getElementById('cricket-runs').textContent = window.cricketScore.runs;
+                document.getElementById('cricket-balls').textContent = window.cricketScore.balls;
+                document.getElementById('cricket-result').innerHTML = 
+                    `<p style="color: #00d4ff;">You scored ${result} runs!</p>`;
+            }
+        }
+
+        // Football Game
+        function startFootballGame() {
+            document.getElementById('game-container').style.display = 'block';
+            const gameBoard = document.getElementById('game-board');
+            gameBoard.innerHTML = `
+                <div style="text-align: center; padding: 30px; color: white;">
+                    <h3>Football Penalty Shootout</h3>
+                    <div style="font-size: 3rem; margin: 20px 0;">⚽</div>
+                    <p>Goals: <span id="football-goals">0</span>/5</p>
+                    <p>Attempts: <span id="football-attempts">0</span>/5</p>
+                    <div style="margin-top: 20px;">
+                        <button class="btn" onclick="shootFootball('left')">Shoot Left</button>
+                        <button class="btn" onclick="shootFootball('center')">Shoot Center</button>
+                        <button class="btn" onclick="shootFootball('right')">Shoot Right</button>
+                    </div>
+                    <div id="football-result" style="margin-top: 20px;"></div>
+                </div>
+            `;
+            
+            window.footballScore = { goals: 0, attempts: 0 };
+        }
+
+        function shootFootball(direction) {
+            if (window.footballScore.attempts >= 5) return;
+            
+            const goalkeepDirection = ['left', 'center', 'right'][Math.floor(Math.random() * 3)];
+            const isGoal = direction !== goalkeepDirection && Math.random() > 0.3;
+            
+            window.footballScore.attempts++;
+            
+            if (isGoal) {
+                window.footballScore.goals++;
+                document.getElementById('football-result').innerHTML = 
+                    `<p style="color: #00ff00;">GOAL! Keeper went ${goalkeepDirection}</p>`;
+            } else {
+                document.getElementById('football-result').innerHTML = 
+                    `<p style="color: #ff0000;">SAVED! Keeper went ${goalkeepDirection}</p>`;
+            }
+            
+            document.getElementById('football-goals').textContent = window.footballScore.goals;
+            document.getElementById('football-attempts').textContent = window.footballScore.attempts;
+            
+            if (window.footballScore.attempts >= 5) {
+                setTimeout(() => {
+                    document.getElementById('football-result').innerHTML += 
+                        `<br><p style="color: #00d4ff;">Final Score: ${window.footballScore.goals}/5 goals!</p>`;
+                }, 1000);
+            }
+        }
+
+        // Tic Tac Toe Game
+        function startTicTacToe() {
+            document.getElementById('game-container').style.display = 'block';
+            const gameBoard = document.getElementById('game-board');
+            gameBoard.innerHTML = `
+                <div style="text-align: center; padding: 20px; color: white;">
+                    <h3>Tic Tac Toe</h3>
+                    <p>Current Player: <span id="current-player">X</span></p>
+                    <div id="tic-tac-toe-board" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; max-width: 300px; margin: 20px auto;">
+                        ${Array.from({length: 9}, (_, i) => 
+                            `<div class="tic-cell" onclick="makeMove(${i})" style="width: 90px; height: 90px; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; font-size: 2rem; cursor: pointer; border-radius: 10px;"></div>`
+                        ).join('')}
+                    </div>
+                    <div id="tic-result" style="margin-top: 20px;"></div>
+                    <button class="btn" onclick="resetTicTacToe()" style="margin-top: 10px;">Reset Game</button>
+                </div>
+            `;
+            
+            window.ticTacToe = {
+                board: Array(9).fill(''),
+                currentPlayer: 'X',
+                gameActive: true
+            };
+        }
+
+        function makeMove(index) {
+            if (!window.ticTacToe.gameActive || window.ticTacToe.board[index]) return;
+            
+            window.ticTacToe.board[index] = window.ticTacToe.currentPlayer;
+            document.querySelectorAll('.tic-cell')[index].textContent = window.ticTacToe.currentPlayer;
+            
+            if (checkTicTacToeWin()) {
+                document.getElementById('tic-result').innerHTML = 
+                    `<p style="color: #00ff00;">Player ${window.ticTacToe.currentPlayer} Wins!</p>`;
+                window.ticTacToe.gameActive = false;
+                return;
+            }
+            
+            if (window.ticTacToe.board.every(cell => cell)) {
+                document.getElementById('tic-result').innerHTML = 
+                    `<p style="color: #ffff00;">It's a Draw!</p>`;
+                window.ticTacToe.gameActive = false;
+                return;
+            }
+            
+            window.ticTacToe.currentPlayer = window.ticTacToe.currentPlayer === 'X' ? 'O' : 'X';
+            document.getElementById('current-player').textContent = window.ticTacToe.currentPlayer;
+        }
+
+        function checkTicTacToeWin() {
+            const winPatterns = [
+                [0, 1, 2], [3, 4, 5], [6, 7, 8], // Rows
+                [0, 3, 6], [1, 4, 7], [2, 5, 8], // Columns
+                [0, 4, 8], [2, 4, 6] // Diagonals
+            ];
+            
+            return winPatterns.some(pattern => 
+                pattern.every(index => 
+                    window.ticTacToe.board[index] && 
+                    window.ticTacToe.board[index] === window.ticTacToe.currentPlayer
+                )
+            );
+        }
+
+        function resetTicTacToe() {
+            window.ticTacToe = {
+                board: Array(9).fill(''),
+                currentPlayer: 'X',
+                gameActive: true
+            };
+            document.querySelectorAll('.tic-cell').forEach(cell => cell.textContent = '');
+            document.getElementById('current-player').textContent = 'X';
+            document.getElementById('tic-result').innerHTML = '';
+        }

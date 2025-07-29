@@ -1,0 +1,106 @@
+#include<stdio.h>
+#include<stdlib.h>
+struct Node
+{
+	int info;
+	struct Node *next;
+};
+typedef struct Node node;
+node *start=NULL,*p,*q,*r;
+void create();//Function Prototype declaration
+void disp();
+void find_smallest();
+void main()
+{
+	int o;
+	do
+	{
+		printf("\n1. Create list\n2.Display\n3. Find Smallest\n4. Exit\n");
+		printf("Enter your choice=");
+		scanf("%d",&o);
+		switch(o)
+		{
+			case(1):
+				create();
+				break;
+			case(2):
+				disp();
+				break;
+			case(3):
+			    find_smallest();
+			    break;
+			case(4):
+				printf("Thank You");
+				break;
+			default:
+				printf("Wrong Choice");
+		}
+	}while(o!=4);
+}
+void create()
+{
+	int num;
+	printf("Enter a number(-1 to stop)=");
+	scanf("%d",&num);
+	while(num!=-1)
+	{
+		p=start;
+		q=(node *)malloc(sizeof(node));
+		q->info=num;
+		q->next=NULL;
+		if(start==NULL)
+		{
+			start=q;
+		}
+		else
+		{
+			while(p->next!=NULL)
+			{
+				p=p->next;
+			}
+			p->next=q;
+			q->next=NULL;
+		}
+		printf("%d is inserted",q->info);
+		printf("\nEnter a number(-1 to exit)=");
+		scanf("%d",&num);
+	}
+}
+void disp()
+{
+	if(start==NULL)
+	{
+		printf("List Underflow");
+		return;
+	}
+	else
+	{
+		p=start;
+		printf("The list is=");
+		while(p!=NULL)
+		{
+			printf("%d\t",p->info);
+			p=p->next;
+		}		
+	}
+}
+
+void find_smallest(){
+	if(start == NULL)
+	{
+		printf("List is empty\n");
+		return;
+	}
+
+	int small = start->info;
+	p = start->next;
+
+	while(p != NULL){
+		if(p->info < small)
+		{
+			small = p->info;
+		}
+		p = p->next;
+	}
+	printf("Smallest element: %d\n", small);
+}

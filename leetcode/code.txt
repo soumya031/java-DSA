@@ -1,0 +1,218 @@
+'use client';
+
+import { useState, useRef, useEffect } from 'react';
+import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Send, Upload } from "lucide-react";
+import { motion } from "framer-motion";
+import { GoogleGenAI } from '@google/genai';
+
+declare global {
+  interface Window {
+    pdfjsLib: any;
+  }
+}
+
+const loadPdfJs = async (): Promise<void> => {
+  if (!window.pdfjsLib) {
+    await new Promise<void>((resolve, reject) => {
+      const script = document.createElement('script');
+      script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js';
+      script.onload = () => {
+        window.pdfjsLib.GlobalWorkerOptions.workerSrc =
+          'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+        resolve();
+      };
+      script.onerror = reject;
+      document.body.appendChild(script);
+    });
+  }
+};
+
+const ai = new GoogleGenAI({
+  apiKey: 'api key'
+});
+
+const model = 'gemini-1.5-flash';
+
+type Message = {
+  id: string;
+  sender: 'user' | 'bot' | 'system';
+  content: string;
+};
+
+export default function ChatbotPage() {
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [input, setInput] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
+  const [parsedPDFContent, setParsedPDFContent] = useState<string>(''); // ✅ Store parsed PDF here
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  const formatMessagesForGemini = () => {
+    return messages
+      .filter((msg) => msg.sender !== 'system') // Skip system (upload) messages
+      .map((msg) => ({
+        role: msg.sender === 'user' ? 'user' : 'model',
+        parts: [{ text: msg.content }],
+      }));
+  };
+
+  const sendMessage = async () => {
+    if (!input.trim()) return;
+
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      sender: 'user',
+      content: input.trim(),
+    };
+
+    const updatedMessages = [...messages, userMessage];
+    setMessages(updatedMessages);
+    setInput('');
+    setIsTyping(true);
+
+    try {
+      // 🔗 Combine user message with parsed PDF text
+      const combinedPrompt = `${input.trim()}\n\n[PDF Content Context]:\n${parsedPDFContent}`;
+
+      const contents = [...formatMessagesForGemini(), {
+        role: 'user',
+        parts: [{ text: combinedPrompt }],
+      }];
+
+      const config = { responseMimeType: 'text/plain' };
+
+      const response = await ai.models.generateContentStream({
+        model,
+        config,
+        contents,
+      });
+
+      let botText = '';
+      for await (const chunk of response) {
+        if (chunk.text) botText += chunk.text;
+      }
+
+      const botMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        sender: 'bot',
+        content: botText,
+      };
+
+      setMessages((prev) => [...prev, botMessage]);
+    } catch (error) {
+      const errorMessage: Message = {
+        id: (Date.now() + 2).toString(),
+        sender: 'bot',
+        content: 'Something went wrong. Please try again.',
+      };
+      setMessages((prev) => [...prev, errorMessage]);
+    } finally {
+      setIsTyping(false);
+    }
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') sendMessage();
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || file.type !== 'application/pdf') return;
+
+    await loadPdfJs();
+
+    const fileReader = new FileReader();
+    fileReader.onload = async () => {
+      const typedarray = new Uint8Array(fileReader.result as ArrayBuffer);
+
+      try {
+        const pdf = await window.pdfjsLib.getDocument({ data: typedarray }).promise;
+
+        let fullText = '';
+        for (let i = 1; i <= pdf.numPages; i++) {
+          const page = await pdf.getPage(i);
+          const content = await page.getTextContent();
+          const text = content.items.map((item: any) => item.str).join(' ');
+          fullText += `\n\nPage ${i}:\n${text}`;
+        }
+
+        console.log('📄 Parsed PDF Content:\n', fullText);
+        setParsedPDFContent(fullText); // ✅ Store parsed content in state
+
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: Date.now().toString(),
+            sender: 'system',
+            content: `📎 1 PDF uploaded: ${file.name}`,
+          },
+        ]);
+      } catch (err) {
+        console.error('Error parsing PDF:', err);
+      }
+    };
+
+    fileReader.readAsArrayBuffer(file);
+  };
+
+  return (
+    <div className="flex flex-col h-screen max-w-2xl mx-auto p-4">
+      <h1 className="text-3xl font-bold mb-2 text-center">SoumyGPT</h1>
+      <h2 className="text-xl font-semibold mb-4 text-center">Welcome</h2>
+
+      <Card className="flex-1 overflow-y-auto p-4 space-y-2 bg-muted rounded-xl">
+        {messages.map((msg) => (
+          <motion.div
+            key={msg.id}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className={`max-w-[75%] px-4 py-2 rounded-lg text-sm whitespace-pre-wrap ${
+              msg.sender === 'user'
+                ? 'bg-primary text-primary-foreground ml-auto'
+                : msg.sender === 'bot'
+                ? 'bg-white text-black'
+                : 'bg-gray-200 text-gray-800 mx-auto'
+            }`}
+          >
+            {msg.content}
+          </motion.div>
+        ))}
+
+        {isTyping && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="bg-white text-black px-4 py-2 rounded-lg text-sm w-fit"
+          >
+            Typing...
+          </motion.div>
+        )}
+
+        <div ref={messagesEndRef} />
+      </Card>
+
+      <div className="flex mt-4 gap-2">
+        <Input
+          type="text"
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={handleKeyPress}
+          placeholder="Type a message..."
+        />
+        <Button onClick={sendMessage} variant="default">
+          <Send size={16} className="mr-1" /> Send
+        </Button>
+        <label className="cursor-pointer flex items-center gap-2">
+          <Upload size={16} />
+          <input type="file" accept="application/pdf" onChange={handleFileUpload} className="hidden" />
+        </label>
+      </div>
+    </div>
+  );
+}
