@@ -3,5 +3,10 @@ public class first {
         System.out.println("hello world");
         
     }
+
+    public int[] twoSum(int[] nums, int target) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'twoSum'");
+    }
     
 }
