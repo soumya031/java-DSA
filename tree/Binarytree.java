@@ -48,7 +48,7 @@ class BinaryTree {
     // Postorder Traversal: Left -> Right -> Root
     public void postorder(Node root) {
         if (root == null) return;
-        postorder(root.left);
+        postorder(root.left); 
         postorder(root.right);
         System.out.print(root.data + " ");
     }
