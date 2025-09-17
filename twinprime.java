@@ -6,7 +6,6 @@ public class twinprime {
         System.out.print("Enter first number: ");
         int num1 = scanner.nextInt();
         int num2 = num1 + 2;
-        scanner.close();
         boolean isPrime1 = true, isPrime2 = true;
         if (num1 <= 1) isPrime1 = false; 
         if (num2 <= 1) isPrime2 = false;
