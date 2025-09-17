@@ -35,13 +35,11 @@ import java.util.*;
 
     public String smallestEquivalentString(String s1, String s2, String baseStr) {
         UnionFind uf = new UnionFind(26);
-
         for (int i = 0; i < s1.length(); i++) {
             char c1 = s1.charAt(i);
             char c2 = s2.charAt(i);
             uf.union(c1 - 'a', c2 - 'a'); 
         }
-
         StringBuilder result = new StringBuilder();
         for (char c : baseStr.toCharArray()) {
             result.append((char) (uf.find(c - 'a') + 'a'));
