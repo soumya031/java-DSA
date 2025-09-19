@@ -4,7 +4,6 @@ import java.util.*;
 
     class UnionFind {
     private int[] parent;
-
     public UnionFind(int n) {
         parent = new int[n];
         for (int i = 0; i < n; i++) {
