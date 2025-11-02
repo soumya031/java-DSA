@@ -30,4 +30,9 @@ class Solution {
     // TODO Auto-generated method stub
     throw new UnsupportedOperationException("Unimplemented method 'maxSubArray'");
   }
+
+  public static char[] coinchange(int n, int[] coins, int[] freq, int v) {
+    // TODO Auto-generated method stub
+    throw new UnsupportedOperationException("Unimplemented method 'coinchange'");
+  }
 }
