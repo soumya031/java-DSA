@@ -6,10 +6,10 @@ public class ratate {
         k = k % n;
         int[] rotation = new int[n];
         for(int i = 0; i < n; i++){
-            rotation[(i + k) % n] = nums[i];
+            rotation[(i + k) % n] = nums[i]; //[5,6,7,4,3,2,1]
         }
         for(int i = 0; i < n; i++){
-            nums[i] = rotation[i];
+            nums[i] = rotation[i];          //[5,6,7, 1,2,3,4]
         }
     }
     public static void main(String[] args) {
