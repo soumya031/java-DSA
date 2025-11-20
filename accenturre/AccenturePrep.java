@@ -69,13 +69,10 @@ public class AccenturePrep {
 
     public static boolean isAnagram(String a, String b) {
         if (a.length() != b.length()) return false;
-
         int[] freq = new int[256];
         for (char c : a.toCharArray()) freq[c]++;
         for (char c : b.toCharArray()) freq[c]--;
-
         for (int x : freq) if (x != 0) return false;
-
         return true;
     }
 
@@ -115,7 +112,6 @@ public class AccenturePrep {
     public static String reverseWords(String s) {
         String[] parts = s.split(" ");
         StringBuilder result = new StringBuilder();
-
         for (int i = parts.length - 1; i >= 0; i--) {
             result.append(parts[i]).append(" ");
         }
@@ -147,14 +143,12 @@ public class AccenturePrep {
     public static int[] mergeArrays(int[] a, int[] b) {
         int i = 0, j = 0, k = 0;
         int[] result = new int[a.length + b.length];
-
         while (i < a.length && j < b.length) {
             if (a[i] < b[j]) result[k++] = a[i++];
             else result[k++] = b[j++];
         }
         while (i < a.length) result[k++] = a[i++];
         while (j < b.length) result[k++] = b[j++];
-
         return result;
     }
 
