@@ -19,7 +19,7 @@ public class trappingrainwater {
                 int waterLevel = Math.min(leftMax[i], rightMax[i]);
                 trappedWater += waterLevel - height[i];   
             }
-               return trappedWater;
+               System.out.println(trappedWater);
   
     }
 }
